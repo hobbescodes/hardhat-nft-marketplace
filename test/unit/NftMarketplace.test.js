@@ -72,9 +72,9 @@ const { developmentChains } = require("../../helper-hardhat-config")
               })
               it("cant be purchased for less than the listed price", async () => {
                   const error = `NftMarketplace__PriceNotMet("${basicNft.address}", ${TOKEN_ID}, ${PRICE})`
-                  expect(
-                      nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE - 1 })
-                  ).to.be.revertedWith(error)
+                  expect(nftMarketplace.buyItem(basicNft.address, TOKEN_ID)).to.be.revertedWith(
+                      error
+                  )
               })
               it("cant purchase an NFT that is not listed", async () => {
                   await basicNft.mintNft()
