@@ -130,4 +130,36 @@ const { developmentChains } = require("../../helper-hardhat-config")
                   )
               })
           })
+
+          describe("updateListing", () => {
+              beforeEach(async () => {
+                  await nftMarketplace.listItem(basicNft.address, TOKEN_ID, PRICE)
+              })
+
+              it("cant update a listing for an NFT that is not listed", async () => {
+                  await basicNft.mintNft()
+                  const error = `NftMarketplace_NotListed("${basicNft.address}", ${TOKEN_ID + 1})`
+                  expect(
+                      nftMarketplace.updateListing(basicNft.address, TOKEN_ID + 1, PRICE + 1)
+                  ).to.be.revertedWith(error)
+              })
+              it("cant update a listing if you do not own the NFT", async () => {
+                  nftMarketplace = nftMarketplaceContract.connect(user)
+                  expect(
+                      nftMarketplace.updateListing(basicNft.address, TOKEN_ID, PRICE)
+                  ).to.be.revertedWith("NftMarketplace__NotOwner")
+              })
+              it("updates the listings data structure", async () => {
+                  const updatedPrice = ethers.utils.parseEther("0.2")
+                  await nftMarketplace.updateListing(basicNft.address, TOKEN_ID, updatedPrice)
+                  const listing = await nftMarketplace.getListing(basicNft.address, TOKEN_ID)
+                  assert(listing.price.toString() == updatedPrice.toString())
+              })
+              it("emits an ItemListed event", async () => {
+                  const updatedPrice = ethers.utils.parseEther("0.2")
+                  expect(
+                      await nftMarketplace.updateListing(basicNft.address, TOKEN_ID, updatedPrice)
+                  ).to.emit("ItemListed")
+              })
+          })
       })
