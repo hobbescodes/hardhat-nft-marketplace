@@ -162,4 +162,40 @@ const { developmentChains } = require("../../helper-hardhat-config")
                   ).to.emit("ItemListed")
               })
           })
+
+          describe("withdrawProceeds", () => {
+              it("cant withdraw when there are no proceeds", async () => {
+                  expect(nftMarketplace.withdrawProceeds()).to.be.revertedWith(
+                      "NftMarketplace__NoProceeds"
+                  )
+              })
+              it("updates thhe proceeds data structure for the caller of the function", async () => {
+                  await nftMarketplace.listItem(basicNft.address, TOKEN_ID, PRICE)
+                  nftMarketplace = nftMarketplaceContract.connect(user)
+                  await nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE })
+                  nftMarketplace = nftMarketplaceContract.connect(deployer)
+                  await nftMarketplace.withdrawProceeds()
+                  const updatedProceeds = await nftMarketplace.getProceeds(deployer.address)
+                  assert(updatedProceeds == 0)
+              })
+              it("withdraws proceeds", async () => {
+                  await nftMarketplace.listItem(basicNft.address, TOKEN_ID, PRICE)
+                  nftMarketplace = nftMarketplaceContract.connect(user)
+                  await nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE })
+                  nftMarketplace = nftMarketplaceContract.connect(deployer)
+
+                  const startingProceeds = await nftMarketplace.getProceeds(deployer.address)
+                  const startingBalance = await deployer.getBalance()
+                  const tx = await nftMarketplace.withdrawProceeds()
+                  const txReceipt = await tx.wait(1)
+                  const { gasUsed, effectiveGasPrice } = txReceipt
+                  const gasCost = gasUsed.mul(effectiveGasPrice)
+                  const endingBalance = await deployer.getBalance()
+
+                  assert(
+                      endingBalance.add(gasCost).toString() ==
+                          startingBalance.add(startingProceeds).toString()
+                  )
+              })
+          })
       })
