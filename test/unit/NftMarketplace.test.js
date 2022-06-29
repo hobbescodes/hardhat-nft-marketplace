@@ -77,7 +77,7 @@ const { developmentChains } = require("../../helper-hardhat-config")
                   ).to.be.revertedWith(error)
               })
               it("cant purchase an NFT that is not listed", async () => {
-                  basicNft.mintNft()
+                  await basicNft.mintNft()
                   const error = `NftMarketplace_NotListed("${basicNft.address}", ${TOKEN_ID + 1})`
                   expect(
                       nftMarketplace.buyItem(basicNft.address, TOKEN_ID + 1, { value: PRICE })
@@ -105,6 +105,29 @@ const { developmentChains } = require("../../helper-hardhat-config")
           describe("cancelListing", () => {
               beforeEach(async () => {
                   await nftMarketplace.listItem(basicNft.address, TOKEN_ID, PRICE)
+              })
+
+              it("cant cancel listing if you dont own the NFT", async () => {
+                  nftMarketplace = nftMarketplaceContract.connect(user)
+                  expect(
+                      nftMarketplace.cancelListing(basicNft.address, TOKEN_ID)
+                  ).to.be.revertedWith("NftMarketplace__NotOwner")
+              })
+              it("cant cancel listing if the NFT is not listed", async () => {
+                  await basicNft.mintNft()
+                  const error = `NftMarketplace_NotListed("${basicNft.address}", ${TOKEN_ID + 1})`
+                  expect(
+                      nftMarketplace.cancelListing(basicNft.address, TOKEN_ID + 1)
+                  ).to.be.revertedWith(error)
+              })
+              it("updates the listings data structure", async () => {
+                  await nftMarketplace.cancelListing(basicNft.address, TOKEN_ID)
+                  expect(nftMarketplace.getListing(basicNft.address, TOKEN_ID)).to.be.reverted
+              })
+              it("emit an event after a listing is canceled", async () => {
+                  expect(nftMarketplace.cancelListing(basicNft.address, TOKEN_ID)).to.emit(
+                      "ItemCanceled"
+                  )
               })
           })
       })
