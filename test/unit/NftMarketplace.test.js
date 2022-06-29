@@ -76,6 +76,13 @@ const { developmentChains } = require("../../helper-hardhat-config")
                       nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE - 1 })
                   ).to.be.revertedWith(error)
               })
+              it("cant purchase an NFT that is not listed", async () => {
+                  basicNft.mintNft()
+                  const error = `NftMarketplace_NotListed("${basicNft.address}", ${TOKEN_ID + 1})`
+                  expect(
+                      nftMarketplace.buyItem(basicNft.address, TOKEN_ID + 1, { value: PRICE })
+                  ).to.be.revertedWith(error)
+              })
               it("updates the proceeds data structure for the seller", async () => {
                   await nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE })
                   const endingProceeds = await nftMarketplace.getProceeds(deployer.address)
@@ -92,6 +99,12 @@ const { developmentChains } = require("../../helper-hardhat-config")
 
                   assert.equal(originalOwner.toString(), deployer.address)
                   assert.equal(newOwner.toString(), user.address)
+              })
+          })
+
+          describe("cancelListing", () => {
+              beforeEach(async () => {
+                  await nftMarketplace.listItem(basicNft.address, TOKEN_ID, PRICE)
               })
           })
       })
