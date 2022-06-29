@@ -58,4 +58,40 @@ const { developmentChains } = require("../../helper-hardhat-config")
                   assert(listing.seller.toString() == deployer.address)
               })
           })
+
+          describe("buyItem", () => {
+              beforeEach(async () => {
+                  await nftMarketplace.listItem(basicNft.address, TOKEN_ID, PRICE)
+                  nftMarketplace = nftMarketplaceContract.connect(user)
+              })
+
+              it("emit an event after an item is bought", async () => {
+                  expect(
+                      nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE })
+                  ).to.emit("ItemBought")
+              })
+              it("cant be purchased for less than the listed price", async () => {
+                  const error = `NftMarketplace__PriceNotMet("${basicNft.address}", ${TOKEN_ID}, ${PRICE})`
+                  expect(
+                      nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE - 1 })
+                  ).to.be.revertedWith(error)
+              })
+              it("updates the proceeds data structure for the seller", async () => {
+                  await nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE })
+                  const endingProceeds = await nftMarketplace.getProceeds(deployer.address)
+                  assert.equal(endingProceeds.toString(), PRICE.toString())
+              })
+              it("updates the listings data structure", async () => {
+                  await nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE })
+                  expect(nftMarketplace.getListing(basicNft.address, TOKEN_ID)).to.be.reverted
+              })
+              it("transfers the nft from the seller to the buyer", async () => {
+                  const originalOwner = await basicNft.ownerOf(TOKEN_ID)
+                  await nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE })
+                  const newOwner = await basicNft.ownerOf(TOKEN_ID)
+
+                  assert.equal(originalOwner.toString(), deployer.address)
+                  assert.equal(newOwner.toString(), user.address)
+              })
+          })
       })
