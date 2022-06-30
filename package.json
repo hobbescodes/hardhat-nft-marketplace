@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "mint": "yarn hardhat run scripts/mint-and-list.js --network localhost",
+    "mintlist": "yarn hardhat run scripts/mint-and-list.js --network localhost",
+    "mint": "yarn hardhat run scripts/mint.js --network localhost",
     "buy": "yarn hardhat run scripts/buy-nft.js --network localhost",
     "cancel": "yarn hardhat run scripts/cancel-listing.js --network localhost",
     "mine": "yarn hardhat run scripts/mine.js --network localhost"
