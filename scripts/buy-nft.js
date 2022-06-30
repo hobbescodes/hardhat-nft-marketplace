@@ -1,7 +1,7 @@
 const { ethers, network } = require("hardhat")
 const { moveBlocks } = require("../utils/move-blocks")
 
-const TOKEN_ID = 2 // has to be updated manually for testing
+const TOKEN_ID = 7 // has to be updated manually for testing
 
 const buyNft = async () => {
     const nftMarketplace = await ethers.getContract("NftMarketplace")
